@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# GentlyOS Boot Initialization
+# Runs at system startup
+#
+
+echo "╔══════════════════════════════════════════════════════════════════╗"
+echo "║                     GentlyOS Initializing                        ║"
+echo "╚══════════════════════════════════════════════════════════════════╝"
+
+# Wait for network
+echo "[BOOT] Waiting for network..."
+sleep 3
+
+# Create runtime directories
+mkdir -p /tmp/gentlyos-forensics
+mkdir -p /tmp/gentlyos-quarantine
+mkdir -p /var/log/gentlyos
+
+# Set up environment
+export GENTLYOS_HOME=/root/.gentlyos
+export NODE_ENV=production
+export PATH="$PATH:/root/.cargo/bin:/root/.local/share/solana/install/active_release/bin"
+
+# Initialize GentlyOS core
+if [ -f /root/.gentlyos/init.js ]; then
+    echo "[BOOT] Starting GentlyOS core..."
+    cd /root/.gentlyos
+    node init.js &
+fi
+
+# Start security watcher
+if [ -f /root/.gentlyos/security.js ]; then
+    echo "[BOOT] Starting security system..."
+    node /root/.gentlyos/security.js &
+fi
+
+# Generate boot manifest (hash all system files)
+echo "[BOOT] Generating boot manifest..."
+find /bin /sbin /usr/bin /usr/sbin -type f -exec sha256sum {} \; 2>/dev/null | \
+    awk '{print substr($1,1,16)}' > /root/.gentlyos/boot-manifest.txt
+
+echo "[BOOT] GentlyOS ready."
+echo "[BOOT] Zero Trust Mode: ACTIVE"

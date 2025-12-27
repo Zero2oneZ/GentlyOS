@@ -1,0 +1,121 @@
+#!/bin/bash
+#
+# GentlyOS HTTP Installer
+# curl -fsSL http://YOUR_SERVER:8080/install | bash
+#
+
+set -e
+
+SERVER="${GENTLYOS_SERVER:-http://localhost:8080}"
+VERSION="0.1.0"
+INSTALL_DIR="${GENTLYOS_HOME:-$HOME/.gentlyos}"
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════════╗"
+echo "║              GentlyOS HTTP Installer v${VERSION}                       ║"
+echo "║                                                                  ║"
+echo "║   Free for personal use | Enterprise requires license           ║"
+echo "╚══════════════════════════════════════════════════════════════════╝"
+echo ""
+
+# Detect package manager
+detect_pm() {
+    if command -v apk >/dev/null 2>&1; then echo "apk"
+    elif command -v apt-get >/dev/null 2>&1; then echo "apt"
+    elif command -v dnf >/dev/null 2>&1; then echo "dnf"
+    elif command -v pacman >/dev/null 2>&1; then echo "pacman"
+    elif command -v pkg >/dev/null 2>&1; then echo "pkg"  # Termux
+    elif command -v brew >/dev/null 2>&1; then echo "brew"
+    else echo "unknown"
+    fi
+}
+
+# Install dependencies
+install_deps() {
+    local pm=$(detect_pm)
+    echo "[1/4] Installing dependencies ($pm)..."
+
+    case $pm in
+        apk) apk add --no-cache nodejs npm git curl ;;
+        apt) apt-get update -qq && apt-get install -y -qq nodejs npm git curl ;;
+        dnf) dnf install -y nodejs npm git curl ;;
+        pacman) pacman -Sy --noconfirm nodejs npm git curl ;;
+        pkg) pkg install -y nodejs git curl ;;  # Termux
+        brew) brew install node git ;;
+        *) echo "Please install: nodejs, npm, git, curl" ;;
+    esac
+}
+
+# Download package
+download() {
+    echo "[2/4] Downloading GentlyOS..."
+
+    mkdir -p "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+
+    curl -fsSL "$SERVER/gentlyos-${VERSION}-runtime.tar.gz" | tar -xz --strip-components=1
+
+    echo "      Downloaded to $INSTALL_DIR"
+}
+
+# Install Node modules
+install_modules() {
+    echo "[3/4] Installing modules..."
+
+    cd "$INSTALL_DIR"
+    npm install --production --silent 2>/dev/null || true
+}
+
+# Setup
+setup() {
+    echo "[4/4] Setting up..."
+
+    # Add to PATH
+    SHELL_RC="$HOME/.bashrc"
+    [ -f "$HOME/.zshrc" ] && SHELL_RC="$HOME/.zshrc"
+
+    if ! grep -q "GENTLYOS_HOME" "$SHELL_RC" 2>/dev/null; then
+        echo "" >> "$SHELL_RC"
+        echo "# GentlyOS" >> "$SHELL_RC"
+        echo "export GENTLYOS_HOME=\"$INSTALL_DIR\"" >> "$SHELL_RC"
+        echo "export PATH=\"\$PATH:\$GENTLYOS_HOME/bin\"" >> "$SHELL_RC"
+    fi
+
+    # Create bin directory with launcher
+    mkdir -p "$INSTALL_DIR/bin"
+    cat > "$INSTALL_DIR/bin/gentlyos" << 'EOF'
+#!/bin/bash
+node "${GENTLYOS_HOME:-$HOME/.gentlyos}/index.js" "$@"
+EOF
+    chmod +x "$INSTALL_DIR/bin/gentlyos"
+}
+
+# Main
+main() {
+    # Only install deps if running as root or if requested
+    if [ "$(id -u)" -eq 0 ] || [ "$1" = "--with-deps" ]; then
+        install_deps
+    fi
+
+    download
+    install_modules
+    setup
+
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════════╗"
+    echo "║                   Installation Complete!                         ║"
+    echo "╠══════════════════════════════════════════════════════════════════╣"
+    echo "║                                                                  ║"
+    echo "║  Location: $INSTALL_DIR"
+    echo "║                                                                  ║"
+    echo "║  Run GentlyOS:                                                   ║"
+    echo "║    source ~/.bashrc && gentlyos                                  ║"
+    echo "║                                                                  ║"
+    echo "║  Or directly:                                                    ║"
+    echo "║    node $INSTALL_DIR/index.js"
+    echo "║                                                                  ║"
+    echo "╚══════════════════════════════════════════════════════════════════╝"
+    echo ""
+}
+
+main "$@"

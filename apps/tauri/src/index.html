@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GentlyOS</title>
+  <style>
+    :root {
+      --primary: #8b5cf6;
+      --secondary: #22c55e;
+      --bg: #0a0a0f;
+      --surface: #1a1a2e;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: 100vh;
+    }
+
+    .titlebar {
+      background: var(--surface);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      user-select: none;
+    }
+
+    .titlebar h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge {
+      background: linear-gradient(135deg, #f97316, #dc2626);
+      color: white;
+      font-size: 0.6rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+    }
+
+    .status {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--secondary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      background: var(--surface);
+      padding: 1rem;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar h2 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      margin-bottom: 0.25rem;
+    }
+
+    .nav-item:hover { background: rgba(139, 92, 246, 0.1); }
+    .nav-item.active {
+      background: rgba(139, 92, 246, 0.2);
+      color: var(--primary);
+    }
+
+    .content {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .content h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h3 {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .input-area input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+
+    .input-area input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .output {
+      background: var(--bg);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 0.75rem;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .panel {
+      background: var(--surface);
+      padding: 1rem;
+      border-left: 1px solid rgba(255,255,255,0.1);
+      overflow-y: auto;
+    }
+
+    .panel h3 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.75rem;
+    }
+
+    .stat-value {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .xor-list {
+      font-family: monospace;
+      font-size: 0.7rem;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .xor-item {
+      padding: 0.25rem 0.5rem;
+      background: var(--bg);
+      border-radius: 0.25rem;
+      margin-bottom: 0.25rem;
+      color: var(--secondary);
+    }
+
+    .footer {
+      background: var(--surface);
+      padding: 0.5rem 1rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar" data-tauri-drag-region>
+      <h1>GentlyOS</h1>
+      <span class="badge">RUST</span>
+      <div class="status">
+        <span class="status-dot"></span>
+        <span id="status-text">Initializing...</span>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="sidebar">
+        <h2>Navigation</h2>
+        <div class="nav-item active">Dashboard</div>
+        <div class="nav-item">Neural Graph</div>
+        <div class="nav-item">CODIE Editor</div>
+        <div class="nav-item">XOR Chain</div>
+        <div class="nav-item">Security</div>
+      </div>
+
+      <div class="content">
+        <h2>Dashboard</h2>
+
+        <div class="card">
+          <h3>Process Interaction</h3>
+          <div class="input-area">
+            <input type="text" id="prompt-input" placeholder="Enter your request...">
+            <button class="btn" onclick="processInteraction()">Send</button>
+          </div>
+          <div class="output" id="output">Ready. Powered by Rust + Tauri.</div>
+        </div>
+
+        <div class="card">
+          <h3>CODIE Preview</h3>
+          <div class="input-area">
+            <input type="text" id="codie-input" placeholder="APP{BTN{t:Click}}" value="APP{GRD{BTN{t:Click Me}}}">
+            <button class="btn" onclick="previewCODIE()">Preview</button>
+          </div>
+          <div id="codie-preview" style="padding: 1rem; background: var(--bg); border-radius: 0.5rem; min-height: 50px;"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>System Status</h3>
+        <div id="stats">
+          <div class="stat"><span>Status</span><span class="stat-value">Loading...</span></div>
+        </div>
+
+        <h3 style="margin-top: 1.5rem;">XOR Chain</h3>
+        <div id="xor-chain" class="xor-list">Loading...</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>GentlyOS v0.1.0 (Tauri/Rust)</span>
+      <span id="license">Personal License (Free)</span>
+    </div>
+  </div>
+
+  <script type="module">
+    const { invoke } = window.__TAURI__.tauri;
+
+    // Initialize on load
+    async function init() {
+      try {
+        const status = await invoke('initialize');
+        console.log('GentlyOS initialized:', status);
+        updateStatus();
+        setInterval(updateStatus, 5000);
+      } catch (e) {
+        console.error('Init error:', e);
+      }
+    }
+
+    // Update status display
+    async function updateStatus() {
+      try {
+        const status = await invoke('get_status');
+        document.getElementById('status-text').textContent =
+          status.initialized ? 'Active' : 'Offline';
+
+        document.getElementById('stats').innerHTML = `
+          <div class="stat"><span>Mode</span><span class="stat-value">${status.mode}</span></div>
+          <div class="stat"><span>License</span><span class="stat-value">${status.license}</span></div>
+          <div class="stat"><span>Boot XOR</span><span class="stat-value">${status.boot_xor}</span></div>
+          <div class="stat"><span>Chain Length</span><span class="stat-value">${status.xor_chain}</span></div>
+          <div class="stat"><span>Graph Nodes</span><span class="stat-value">${status.graph_nodes}</span></div>
+        `;
+
+        // Update XOR chain display
+        const chain = await invoke('get_xor_chain');
+        document.getElementById('xor-chain').innerHTML = chain
+          .slice(-10)
+          .reverse()
+          .map(xor => `<div class="xor-item">${xor}</div>`)
+          .join('') || '<em>Empty</em>';
+
+      } catch (e) {
+        document.getElementById('status-text').textContent = 'Error';
+      }
+    }
+
+    // Process interaction
+    window.processInteraction = async function() {
+      const input = document.getElementById('prompt-input');
+      const output = document.getElementById('output');
+      const prompt = input.value.trim();
+
+      if (!prompt) return;
+
+      output.textContent = 'Processing...';
+
+      try {
+        const result = await invoke('process_interaction', {
+          interaction: {
+            type: 'user',
+            action: 'query',
+            prompt: prompt
+          }
+        });
+
+        output.textContent = JSON.stringify(result, null, 2);
+        input.value = '';
+        updateStatus();
+      } catch (e) {
+        output.textContent = `Error: ${e}`;
+      }
+    };
+
+    // Preview CODIE
+    window.previewCODIE = async function() {
+      const input = document.getElementById('codie-input');
+      const preview = document.getElementById('codie-preview');
+
+      try {
+        const html = await invoke('hydrate_codie', { codie: input.value });
+        preview.innerHTML = html;
+      } catch (e) {
+        preview.innerHTML = `<em style="color: #f87171;">Error: ${e}</em>`;
+      }
+    };
+
+    // Enter key handling
+    document.getElementById('prompt-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') window.processInteraction();
+    });
+
+    // Start
+    init();
+  </script>
+</body>
+</html>

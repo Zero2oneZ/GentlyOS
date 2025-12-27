@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+  <title>GentlyOS</title>
+  <style>
+    :root {
+      --primary: #8b5cf6;
+      --secondary: #22c55e;
+      --bg: #0a0a0f;
+      --surface: #1a1a2e;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: 100vh;
+    }
+
+    .titlebar {
+      -webkit-app-region: drag;
+      background: var(--surface);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .titlebar h1 {
+      font-size: 1rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .status {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--secondary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      background: var(--surface);
+      padding: 1rem;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .nav-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: background 0.2s;
+    }
+
+    .nav-item:hover {
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .nav-item.active {
+      background: rgba(139, 92, 246, 0.2);
+      color: var(--primary);
+    }
+
+    .content {
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .content h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .input-area input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+
+    .input-area input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .output {
+      background: var(--bg);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.75rem;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .panel {
+      background: var(--surface);
+      padding: 1rem;
+      border-left: 1px solid rgba(255,255,255,0.1);
+      overflow-y: auto;
+    }
+
+    .panel h3 {
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      color: var(--text-muted);
+    }
+
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.75rem;
+    }
+
+    .stat-value {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .footer {
+      background: var(--surface);
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar">
+      <h1>GentlyOS</h1>
+      <div class="status">
+        <span class="status-dot"></span>
+        <span id="status-text">Initializing...</span>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="sidebar">
+        <h2>Navigation</h2>
+        <div class="nav-item active">Dashboard</div>
+        <div class="nav-item">Neural Graph</div>
+        <div class="nav-item">CODIE Editor</div>
+        <div class="nav-item">Security</div>
+        <div class="nav-item">Settings</div>
+      </div>
+
+      <div class="content">
+        <h2>Dashboard</h2>
+
+        <div class="card">
+          <h3 style="margin-bottom: 1rem; font-size: 0.875rem;">Process Interaction</h3>
+          <div class="input-area">
+            <input type="text" id="prompt-input" placeholder="Enter your request...">
+            <button class="btn" onclick="processInteraction()">Send</button>
+          </div>
+          <div class="output" id="output">Ready for input...</div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-bottom: 1rem; font-size: 0.875rem;">CODIE Preview</h3>
+          <div class="input-area">
+            <input type="text" id="codie-input" placeholder="W{d:example,t:purple}" value="APP{GRD{BTN{t:Click Me}}}">
+            <button class="btn" onclick="previewCODIE()">Preview</button>
+          </div>
+          <div id="codie-preview" style="padding: 1rem; background: var(--bg); border-radius: 0.5rem;"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>System Stats</h3>
+        <div id="stats">
+          <div class="stat"><span>Status</span><span class="stat-value">Loading...</span></div>
+        </div>
+
+        <h3 style="margin-top: 1.5rem;">XOR Chain</h3>
+        <div id="xor-chain" class="output" style="max-height: 150px;">
+          Loading...
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>GentlyOS v0.1.0</span>
+      <span id="license">Personal License (Free)</span>
+    </div>
+  </div>
+
+  <script>
+    // Initialize
+    async function init() {
+      updateStatus();
+      setInterval(updateStatus, 5000);
+    }
+
+    // Update status
+    async function updateStatus() {
+      try {
+        const status = await window.gentlyos.getStatus();
+        document.getElementById('status-text').textContent =
+          status.initialized ? 'Active' : 'Offline';
+
+        const statsHtml = `
+          <div class="stat"><span>Mode</span><span class="stat-value">${status.mode || 'N/A'}</span></div>
+          <div class="stat"><span>License</span><span class="stat-value">${status.license || 'Personal'}</span></div>
+          <div class="stat"><span>XOR Chain</span><span class="stat-value">${status.xorChain || 0} entries</span></div>
+          <div class="stat"><span>Graph Nodes</span><span class="stat-value">${status.graph?.nodes || 0}</span></div>
+          <div class="stat"><span>Patterns</span><span class="stat-value">${status.patterns?.patterns || 0}</span></div>
+        `;
+        document.getElementById('stats').innerHTML = statsHtml;
+        document.getElementById('xor-chain').textContent = status.bootXor || 'N/A';
+      } catch (e) {
+        document.getElementById('status-text').textContent = 'Disconnected';
+      }
+    }
+
+    // Process interaction
+    async function processInteraction() {
+      const input = document.getElementById('prompt-input');
+      const output = document.getElementById('output');
+      const prompt = input.value.trim();
+
+      if (!prompt) return;
+
+      output.textContent = 'Processing...';
+
+      try {
+        const result = await window.gentlyos.process({
+          type: 'user',
+          action: 'query',
+          prompt: prompt
+        });
+
+        output.textContent = JSON.stringify(result, null, 2);
+        input.value = '';
+        updateStatus();
+      } catch (e) {
+        output.textContent = `Error: ${e.message}`;
+      }
+    }
+
+    // Preview CODIE
+    async function previewCODIE() {
+      const input = document.getElementById('codie-input');
+      const preview = document.getElementById('codie-preview');
+
+      try {
+        const html = await window.gentlyos.hydrate(input.value);
+        preview.innerHTML = html || '<em>No preview available</em>';
+      } catch (e) {
+        preview.innerHTML = `<em>Error: ${e.message}</em>`;
+      }
+    }
+
+    // Enter key handler
+    document.getElementById('prompt-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') processInteraction();
+    });
+
+    init();
+  </script>
+</body>
+</html>

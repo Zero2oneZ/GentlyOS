@@ -1,5 +1,7 @@
 # Large binary files - download via netboot/download.sh
 *.tar.gz
+*.iso
+*.img
 boot/vmlinuz-*
 boot/initramfs-*
 boot/modloop-*
@@ -7,3 +9,24 @@ boot/System.map-*
 boot/config-*
 netboot/boot/
 netboot/*.tar.gz
+
+# Node.js
+node_modules/
+*.log
+.DS_Store
+
+# Environment & secrets
+.env
+.env.*
+*.local
+
+# Build outputs
+dist/
+target/
+
+# IDE
+.vscode/
+.idea/
+
+# Rust
+security/firewall/target/

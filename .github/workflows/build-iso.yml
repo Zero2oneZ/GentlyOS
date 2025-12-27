@@ -1,0 +1,45 @@
+name: Build GentlyOS ISO
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xorriso syslinux syslinux-utils isolinux mtools
+
+      - name: Build ISO
+        run: |
+          chmod +x build.sh boot/iso/build.sh
+          ./build.sh
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: gentlyos-iso
+          path: dist/*.iso
+
+      - name: Upload Runtime Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: gentlyos-runtime
+          path: dist/*.tar.gz
+
+      - name: Create Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          files: |
+            dist/*.iso
+            dist/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

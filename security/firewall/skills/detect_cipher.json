@@ -1,0 +1,24 @@
+{
+  "name": "detect_cipher_patterns",
+  "description": "Detects cryptographic patterns including mathematical constant seeds, power-of-2 grids, self-referencing hashes, GUID correlations, and low-discrepancy sequence indicators. These patterns are update-proof as they detect methodology, not specific values.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "File or directory to scan"
+      },
+      "recursive": {
+        "type": "boolean",
+        "description": "Scan directories recursively",
+        "default": true
+      },
+      "deep_scan": {
+        "type": "boolean",
+        "description": "Perform deeper binary analysis",
+        "default": false
+      }
+    },
+    "required": ["path"]
+  }
+}

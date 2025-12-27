@@ -1,0 +1,24 @@
+{
+  "name": "gentlyos",
+  "version": "0.1.0",
+  "description": "Self-evolving operating system with neural graph learning",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "build:iso": "bash boot/iso/build.sh",
+    "test": "node test/runner.js"
+  },
+  "keywords": [
+    "os",
+    "ai",
+    "neural-network",
+    "solana",
+    "ipfs"
+  ],
+  "author": "GentlyOS",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
