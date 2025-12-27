@@ -1,0 +1,20 @@
+[package]
+name = "gentlyos-genesis"
+version = "0.1.0"
+description = "GentlyOS Genesis Program - OS + User Token Management"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "gentlyos_genesis"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.29.0"
+anchor-spl = "0.29.0"

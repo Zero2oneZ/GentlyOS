@@ -97,9 +97,18 @@ create_overlay() {
     cp -a "$CORE_DIR/infra/"* "$BUILD_DIR/overlay/root/.gentlyos/infra/" 2>/dev/null || true
     cp -a "$CORE_DIR/security/"* "$BUILD_DIR/overlay/root/.gentlyos/security/" 2>/dev/null || true
 
-    # Make startup script executable
+    # Copy boot genesis scripts (Solana/BTC-first)
+    mkdir -p "$BUILD_DIR/overlay/root/.gentlyos/boot/genesis"
+    cp -a "$CORE_DIR/boot/genesis/"* "$BUILD_DIR/overlay/root/.gentlyos/boot/genesis/" 2>/dev/null || true
+
+    # Copy VERSION file
+    cp "$CORE_DIR/VERSION" "$BUILD_DIR/overlay/root/.gentlyos/VERSION" 2>/dev/null || echo "0.1.0" > "$BUILD_DIR/overlay/root/.gentlyos/VERSION"
+
+    # Make all scripts executable
     chmod +x "$BUILD_DIR/overlay/etc/local.d/gentlyos.start"
-    chmod +x "$BUILD_DIR/overlay/root/.gentlyos/install-stack.sh"
+    chmod +x "$BUILD_DIR/overlay/root/.gentlyos/install-stack.sh" 2>/dev/null || true
+    find "$BUILD_DIR/overlay/root/.gentlyos/boot/genesis" -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+    find "$BUILD_DIR/overlay/root/.gentlyos/boot/genesis" -name "*.js" -exec chmod +x {} \; 2>/dev/null || true
 
     # Create the apkovl tarball
     cd "$BUILD_DIR/overlay"

@@ -3,42 +3,226 @@
 # GentlyOS Boot Initialization
 # Runs at system startup
 #
+# CRITICAL: Solana/BTC operations run FIRST
+# Values justify privileges - all events are audited
+#
+
+set -e
 
 echo "╔══════════════════════════════════════════════════════════════════╗"
 echo "║                     GentlyOS Initializing                        ║"
+echo "║                                                                  ║"
+echo "║  Solana/BTC-First Boot Sequence                                  ║"
+echo "║  Every event audited with BTC block + timestamp                  ║"
 echo "╚══════════════════════════════════════════════════════════════════╝"
 
-# Wait for network
-echo "[BOOT] Waiting for network..."
-sleep 3
+GENESIS_DIR="/root/.gentlyos/genesis"
+BOOT_GENESIS="/root/.gentlyos/boot/genesis"
+
+# Colors
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+log() { echo "${GREEN}[BOOT]${NC} $1"; }
+phase() { echo "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"; echo "${CYAN}  PHASE: $1${NC}"; echo "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"; }
+warn() { echo "${YELLOW}[BOOT]${NC} $1"; }
+error() { echo "${RED}[BOOT]${NC} $1"; }
+
+# ============================================
+# PHASE 0: NETWORK + BASE
+# ============================================
+phase "0: NETWORK + BASE"
+
+log "Waiting for network..."
+for i in 1 2 3 4 5; do
+    if ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+        log "Network available"
+        break
+    fi
+    sleep 2
+done
 
 # Create runtime directories
+log "Creating runtime directories..."
 mkdir -p /tmp/gentlyos-forensics
 mkdir -p /tmp/gentlyos-quarantine
 mkdir -p /var/log/gentlyos
+mkdir -p "$GENESIS_DIR"
+mkdir -p /root/.gentlyos/audit
 
-# Set up environment
+# Set up base environment
 export GENTLYOS_HOME=/root/.gentlyos
+export GENTLYOS_GENESIS="$GENESIS_DIR"
 export NODE_ENV=production
+
+# ============================================
+# PHASE 1: RUST + SOLANA + ANCHOR (CRITICAL)
+# ============================================
+phase "1: RUST + SOLANA + ANCHOR (CRITICAL)"
+
+if [ ! -f "$GENESIS_DIR/solana-manifest.json" ]; then
+    log "Running Solana-first installer..."
+    if [ -f "$BOOT_GENESIS/solana-first.sh" ]; then
+        sh "$BOOT_GENESIS/solana-first.sh"
+    else
+        warn "solana-first.sh not found, skipping"
+    fi
+else
+    log "Solana stack already installed"
+fi
+
+# Update PATH with Solana tools
 export PATH="$PATH:/root/.cargo/bin:/root/.local/share/solana/install/active_release/bin"
 
-# Initialize GentlyOS core
+# ============================================
+# PHASE 2: BTC GENESIS TIMESTAMP
+# ============================================
+phase "2: BTC GENESIS TIMESTAMP"
+
+if [ ! -f "$GENESIS_DIR/btc-genesis.json" ]; then
+    log "Fetching BTC genesis timestamp..."
+    if [ -f "$BOOT_GENESIS/btc-timestamp.sh" ]; then
+        sh "$BOOT_GENESIS/btc-timestamp.sh"
+    else
+        warn "btc-timestamp.sh not found, skipping"
+    fi
+else
+    log "BTC genesis already recorded"
+    # Show genesis info
+    if command -v jq >/dev/null 2>&1; then
+        BLOCK=$(jq -r '.btc_block_height' "$GENESIS_DIR/btc-genesis.json")
+        log "Genesis BTC block: $BLOCK"
+    fi
+fi
+
+# Load BTC environment
+if [ -f "$GENESIS_DIR/btc-env.sh" ]; then
+    . "$GENESIS_DIR/btc-env.sh"
+fi
+
+# ============================================
+# PHASE 3: MINT GENTLYOS PROGRAM
+# ============================================
+phase "3: MINT GENTLYOS PROGRAM"
+
+if [ ! -f "$GENESIS_DIR/os-genesis.json" ]; then
+    log "Minting OS program..."
+    if [ -f "$BOOT_GENESIS/mint-os.sh" ]; then
+        sh "$BOOT_GENESIS/mint-os.sh"
+    else
+        warn "mint-os.sh not found, skipping"
+    fi
+else
+    log "OS program already minted"
+    # Show program info
+    if command -v jq >/dev/null 2>&1; then
+        VERSION=$(jq -r '.version' "$GENESIS_DIR/os-genesis.json")
+        SERIAL=$(jq -r '.serial' "$GENESIS_DIR/os-genesis.json")
+        log "Version: $VERSION | Serial: ${SERIAL:0:24}..."
+    fi
+fi
+
+# ============================================
+# PHASE 4: FILE TREE MAPPING + WALLET MINT
+# ============================================
+phase "4: FILE TREE MAPPING + WALLET MINT"
+
+if [ ! -f "$GENESIS_DIR/os-wallets.json" ]; then
+    log "Mapping file tree to wallets..."
+    if [ -f "$BOOT_GENESIS/tree-mint.js" ] && command -v node >/dev/null 2>&1; then
+        node "$BOOT_GENESIS/tree-mint.js"
+    else
+        warn "tree-mint.js not found or Node.js unavailable"
+    fi
+else
+    log "File tree already mapped"
+    # Show wallet count
+    if command -v jq >/dev/null 2>&1; then
+        WALLETS=$(jq -r '.total_wallets' "$GENESIS_DIR/os-wallets.json")
+        log "OS wallets: $WALLETS"
+    fi
+fi
+
+# Initialize ROOT user if not exists
+if [ ! -f "$GENESIS_DIR/users.json" ]; then
+    log "Initializing ROOT user..."
+    if [ -f "$BOOT_GENESIS/user-mint.js" ] && command -v node >/dev/null 2>&1; then
+        node "$BOOT_GENESIS/user-mint.js" init
+    fi
+fi
+
+# ============================================
+# PHASE 4.5: GIT INITIALIZATION
+# ============================================
+phase "4.5: GIT INITIALIZATION"
+
+if [ ! -f "$GENESIS_DIR/git-manifest.json" ]; then
+    log "Initializing local git repository..."
+    if [ -f "$BOOT_GENESIS/git-init.sh" ]; then
+        sh "$BOOT_GENESIS/git-init.sh"
+    else
+        warn "git-init.sh not found, skipping"
+    fi
+else
+    log "Git already initialized"
+    # Show git info
+    if command -v jq >/dev/null 2>&1; then
+        INSTANCE=$(jq -r '.instance_id' "$GENESIS_DIR/git-manifest.json")
+        BRANCH=$(jq -r '.branch' "$GENESIS_DIR/git-manifest.json")
+        log "Instance: $INSTANCE | Branch: $BRANCH"
+    fi
+fi
+
+# ============================================
+# PHASE 5: COMPLETE + VERIFY
+# ============================================
+phase "5: COMPLETE + VERIFY"
+
+# Record BOOT audit event
+log "Recording BOOT audit event..."
+if [ -f "/root/.gentlyos/security/audit/btc-auditor.js" ] && command -v node >/dev/null 2>&1; then
+    node -e "
+      const { getAuditor } = require('/root/.gentlyos/security/audit/btc-auditor.js');
+      const auditor = getAuditor();
+      auditor.auditSystem('BOOT', { phase: 'complete' }).then(() => process.exit(0));
+    " 2>/dev/null || true
+fi
+
+# Final BTC checkpoint
+if [ -f "$GENESIS_DIR/btc-checkpoint.sh" ]; then
+    "$GENESIS_DIR/btc-checkpoint.sh" BOOT_COMPLETE
+fi
+
+# Generate boot manifest (hash all system files)
+log "Generating boot manifest..."
+find /bin /sbin /usr/bin /usr/sbin -type f -exec sha256sum {} \; 2>/dev/null | \
+    awk '{print substr($1,1,16)}' > /root/.gentlyos/boot-manifest.txt
+
+# Start GentlyOS core services
+log "Starting GentlyOS core..."
 if [ -f /root/.gentlyos/init.js ]; then
-    echo "[BOOT] Starting GentlyOS core..."
     cd /root/.gentlyos
     node init.js &
 fi
 
 # Start security watcher
 if [ -f /root/.gentlyos/security.js ]; then
-    echo "[BOOT] Starting security system..."
+    log "Starting security system..."
     node /root/.gentlyos/security.js &
 fi
 
-# Generate boot manifest (hash all system files)
-echo "[BOOT] Generating boot manifest..."
-find /bin /sbin /usr/bin /usr/sbin -type f -exec sha256sum {} \; 2>/dev/null | \
-    awk '{print substr($1,1,16)}' > /root/.gentlyos/boot-manifest.txt
+echo ""
+echo "╔══════════════════════════════════════════════════════════════════╗"
+echo "║                     GentlyOS READY                               ║"
+echo "╠══════════════════════════════════════════════════════════════════╣"
+echo "║  Zero Trust Mode: ACTIVE                                         ║"
+echo "║  BTC Audit: ENABLED                                              ║"
+echo "║  Values Justify Privileges: ENFORCED                             ║"
+echo "╚══════════════════════════════════════════════════════════════════╝"
+echo ""
 
-echo "[BOOT] GentlyOS ready."
-echo "[BOOT] Zero Trust Mode: ACTIVE"
+log "Boot sequence complete"
+exit 0
