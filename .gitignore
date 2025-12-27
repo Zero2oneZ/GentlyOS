@@ -1,0 +1,9 @@
+# Large binary files - download via netboot/download.sh
+*.tar.gz
+boot/vmlinuz-*
+boot/initramfs-*
+boot/modloop-*
+boot/System.map-*
+boot/config-*
+netboot/boot/
+netboot/*.tar.gz

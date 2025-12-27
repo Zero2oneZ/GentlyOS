@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GentlyOS v0.1.0 - Network Install</title>
+  <style>
+    body { font-family: monospace; background: #0a0a0f; color: #e2e8f0; padding: 2rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #8b5cf6; }
+    h2 { color: #22c55e; margin-top: 2rem; }
+    pre { background: #1a1a2e; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
+    code { color: #22c55e; }
+    a { color: #8b5cf6; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    td, th { padding: 0.5rem; text-align: left; border-bottom: 1px solid #333; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GentlyOS v0.1.0</h1>
+    <p>Portable Alpine-based operating system - Take your computers back.</p>
+
+    <h2>Network Boot (PXE/iPXE)</h2>
+    <pre><code>#!ipxe
+kernel http://YOUR_IP:8080/boot/vmlinuz-lts alpine_repo=http://dl-cdn.alpinelinux.org/alpine/v3.21/main modloop=http://YOUR_IP:8080/boot/modloop-lts ip=dhcp
+initrd http://YOUR_IP:8080/boot/initramfs-lts
+boot</code></pre>
+
+    <h2>USB Boot</h2>
+    <p>Download and write to USB:</p>
+    <pre><code>curl -O http://YOUR_IP:8080/boot/vmlinuz-lts
+curl -O http://YOUR_IP:8080/boot/initramfs-lts
+# Use Ventoy or dd to create bootable USB</code></pre>
+
+    <h2>Boot Files</h2>
+    <table>
+      <tr><th>File</th><th>Size</th><th>Purpose</th></tr>
+      <tr><td><a href="/boot/vmlinuz-lts">vmlinuz-lts</a></td><td>11 MB</td><td>Linux Kernel</td></tr>
+      <tr><td><a href="/boot/initramfs-lts">initramfs-lts</a></td><td>24 MB</td><td>Initial RAM disk</td></tr>
+      <tr><td><a href="/boot/modloop-lts">modloop-lts</a></td><td>193 MB</td><td>Kernel modules</td></tr>
+    </table>
+
+    <h2>After Boot</h2>
+    <pre><code># Login as root (no password)
+# Run installer:
+setup-alpine
+
+# Or automated:
+setup-alpine -f http://YOUR_IP:8080/answers</code></pre>
+
+    <h2>GitHub</h2>
+    <p><a href="https://github.com/Abracahedron-ai/GentlyOS">github.com/Abracahedron-ai/GentlyOS</a></p>
+  </div>
+</body>
+</html>
